@@ -1,19 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-  --color-primary: #0056d2;
-  --color-primary-dark: #004ab3;
-  --color-purple-accent: #a435f0;
-  --color-dark-surface: #1c1d1f;
-  --color-body-text: #3d3d3d;
-  --color-muted-text: #6a6f73;
-  --color-border: #d1d7dc;
-  --color-background: #f7f9fa;
-  --color-success: #1e7e34;
-  --color-error: #c0392b;
-
-  --font-sans: "Inter", system-ui, sans-serif;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   html {
