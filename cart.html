@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart — Coursid</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .cart-layout { display:grid; grid-template-columns:1fr 320px; gap:32px; padding:40px 0 64px; align-items:start; }
+    .cart-title { font-size:30px; font-weight:800; margin-bottom:24px; }
+    .cart-item { display:flex; gap:16px; padding:16px 0; border-bottom:1px solid #e8e9eb; }
+    .cart-thumb { width:100px; aspect-ratio:16/9; background:#1c1d1f; border-radius:4px; flex-shrink:0; display:flex;align-items:center;justify-content:center;font-size:24px; }
+    .cart-item-title { font-size:15px; font-weight:700; color:#1c1d1f; margin-bottom:4px; }
+    .cart-item-instructor { font-size:13px; color:#6a6f73; margin-bottom:8px; }
+    .cart-item-price { font-size:16px; font-weight:700; }
+    .cart-item-remove { font-size:13px; color:#a435f0; cursor:pointer; margin-top:4px; }
+    .cart-item-remove:hover { text-decoration:underline; }
+    .order-card { background:#fff; border:1px solid #e8e9eb; border-radius:8px; padding:24px; position:sticky; top:80px; }
+    .order-title { font-size:18px; font-weight:800; margin-bottom:16px; }
+    .order-row { display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px; color:#3d3d3d; }
+    .order-total { font-size:20px; font-weight:800; border-top:1px solid #e8e9eb; padding-top:12px; margin-top:8px; display:flex;justify-content:space-between; }
+    .empty-cart { text-align:center; padding:80px 24px; }
+    .checkout-modal { display:none; }
+    .card-input-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:768px){ .cart-layout{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-logo">Cours<span>id</span></a>
+    <div class="nav-links flex gap-8">
+      <div id="nav-user-area" class="flex gap-8"></div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="cart-layout">
+    <div>
+      <div class="cart-title">Shopping Cart</div>
+      <div id="cart-items"></div>
+    </div>
+    <div>
+      <div class="order-card" id="order-card"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Checkout modal -->
+<div class="modal-overlay" id="checkout-modal" style="display:none;">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title" id="checkout-title">Complete your purchase</div>
+      <div class="modal-close" onclick="closeCheckout()">✕</div>
+    </div>
+    <div class="modal-body" id="checkout-body">
+      <div id="payment-form-area">
+        <div style="background:#f7f9fa;border-radius:8px;padding:16px;margin-bottom:20px;font-size:14px;color:#6a6f73;">
+          🔒 Secure checkout powered by Stripe. 30-day money-back guarantee.
+        </div>
+        <div class="form-group">
+          <label class="label">Card number</label>
+          <input class="input" id="card-number" type="text" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)">
+        </div>
+        <div class="card-input-row">
+          <div class="form-group">
+            <label class="label">Expiry</label>
+            <input class="input" id="card-expiry" type="text" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)">
+          </div>
+          <div class="form-group">
+            <label class="label">CVC</label>
+            <input class="input" id="card-cvc" type="text" placeholder="123" maxlength="3">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="label">Name on card</label>
+          <input class="input" id="card-name" type="text" placeholder="Alex Johnson">
+        </div>
+        <div style="border-top:1px solid #e8e9eb;padding-top:16px;margin-top:8px;">
+          <div class="order-row"><span>Subtotal</span><span id="checkout-subtotal"></span></div>
+          <div class="order-row" style="color:#1e7e34;"><span>Discount</span><span id="checkout-discount"></span></div>
+          <div class="order-total"><span>Total today</span><span id="checkout-total"></span></div>
+        </div>
+        <button class="btn btn-purple btn-full mt-16" id="pay-btn" onclick="processPayment()">Complete purchase</button>
+        <div style="font-size:12px;color:#b4bac4;text-align:center;margin-top:10px;">By completing your purchase you agree to these Terms of Service.</div>
+      </div>
+      <div id="payment-success" style="display:none;text-align:center;padding:20px 0;">
+        <div style="font-size:56px;margin-bottom:16px;">🎉</div>
+        <div style="font-size:22px;font-weight:800;margin-bottom:8px;">Purchase complete!</div>
+        <p style="color:#6a6f73;margin-bottom:24px;">You now have full access to all your courses.</p>
+        <button class="btn btn-purple" onclick="window.location='dashboard.html'">Go to My Learning</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="data/courses.js"></script>
+<script src="js/api.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initNav();
+  renderCart();
+});
+
+function renderCart() {
+  const items = Cart.getItems();
+  const cartEl = document.getElementById('cart-items');
+  const orderEl = document.getElementById('order-card');
+  const emojis = { 'web-dev':'💻','data-sci':'📊','ai-ml':'🤖','design':'🎨','marketing':'📣','devops':'☁️','mobile':'📱' };
+
+  if (!items.length) {
+    cartEl.innerHTML = `
+      <div class="empty-cart">
+        <div style="font-size:64px;margin-bottom:16px;">🛒</div>
+        <div style="font-size:24px;font-weight:800;margin-bottom:8px;">Your cart is empty</div>
+        <p style="color:#6a6f73;margin-bottom:24px;">Keep shopping to find your next course!</p>
+        <a href="catalog.html" class="btn btn-purple">Browse courses</a>
+      </div>`;
+    orderEl.innerHTML = '';
+    return;
+  }
+
+  const total = Cart.getTotal();
+  const original = items.reduce((s,i) => {
+    const c = MockData.COURSES.find(co=>co.id===i.id);
+    return s + (c?.originalPrice || i.price);
+  }, 0);
+  const saved = original - total;
+
+  cartEl.innerHTML = `
+    <div style="font-size:14px;font-weight:600;color:#6a6f73;margin-bottom:8px;">${items.length} course${items.length!==1?'s':''} in cart</div>
+    ${items.map(item => {
+      const c = MockData.COURSES.find(co=>co.id===item.id);
+      const emoji = emojis[c?.category] || '📚';
+      return `
+        <div class="cart-item">
+          <div class="cart-thumb">${emoji}</div>
+          <div style="flex:1;">
+            <div class="cart-item-title">${item.title}</div>
+            <div class="cart-item-instructor">${item.instructor||'Instructor'}</div>
+            <div class="star-row">
+              ${UI.stars(c?.rating||0)}
+              <span class="star-count">(${UI.formatNumber(c?.ratingsCount||0)})</span>
+            </div>
+            <div class="cart-item-remove" onclick="removeItem('${item.id}')">Remove</div>
+          </div>
+          <div class="cart-item-price">${item.price===0?'Free':UI.formatPrice(item.price)}</div>
+        </div>
+      `;
+    }).join('')}
+  `;
+
+  orderEl.innerHTML = `
+    <div class="order-title">Order Summary</div>
+    <div class="order-row"><span>Original price</span><span>${UI.formatPrice(original)}</span></div>
+    ${saved > 0 ? `<div class="order-row" style="color:#1e7e34;"><span>Discounts</span><span>-${UI.formatPrice(saved)}</span></div>` : ''}
+    <div class="order-total"><span>Total</span><span>${total===0?'Free':UI.formatPrice(total)}</span></div>
+    <button class="btn btn-purple btn-full mt-16" onclick="openCheckout()">
+      ${total===0?'Enroll now — Free':'Proceed to checkout'}
+    </button>
+    <div style="text-align:center;margin-top:12px;font-size:13px;color:#6a6f73;">30-Day Money-Back Guarantee</div>
+    <div class="divider"></div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px;">Promotions</div>
+    <div style="display:flex;gap:8px;">
+      <input class="input" placeholder="Enter coupon" id="coupon-input" style="flex:1;">
+      <button class="btn btn-outline-black btn-sm" onclick="applyCoupon()">Apply</button>
+    </div>
+  `;
+}
+
+function removeItem(id) {
+  Cart.removeItem(id);
+  renderCart();
+  UI.toast('Item removed from cart');
+}
+
+function openCheckout() {
+  if (!Auth.isLoggedIn()) { window.location = 'login.html?redirect=cart.html'; return; }
+  const total = Cart.getTotal();
+  const original = Cart.getItems().reduce((s,i)=>{ const c=MockData.COURSES.find(co=>co.id===i.id); return s+(c?.originalPrice||i.price); },0);
+  document.getElementById('checkout-subtotal').textContent = UI.formatPrice(original);
+  document.getElementById('checkout-discount').textContent = '-' + UI.formatPrice(original - total);
+  document.getElementById('checkout-total').textContent = total===0?'Free':UI.formatPrice(total);
+  if (total === 0) {
+    enrollAll();
+    return;
+  }
+  document.getElementById('checkout-modal').style.display = 'flex';
+}
+
+function closeCheckout() {
+  document.getElementById('checkout-modal').style.display = 'none';
+}
+
+async function enrollAll() {
+  const items = Cart.getItems();
+  for (const item of items) {
+    await CoursidAPI.enrollCourse(item.id);
+  }
+  Cart.clear();
+  UI.toast('Successfully enrolled in all courses!', 'success');
+  setTimeout(() => window.location = 'dashboard.html', 1000);
+}
+
+async function processPayment() {
+  const num  = document.getElementById('card-number').value.replace(/\s/g,'');
+  const exp  = document.getElementById('card-expiry').value;
+  const cvc  = document.getElementById('card-cvc').value;
+  const name = document.getElementById('card-name').value.trim();
+
+  if (num.length < 16) { UI.toast('Enter a valid card number', 'error'); return; }
+  if (!exp || !cvc)    { UI.toast('Enter expiry and CVC', 'error'); return; }
+  if (!name)           { UI.toast('Enter name on card', 'error'); return; }
+
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Processing…';
+
+  // Simulate payment
+  await new Promise(r => setTimeout(r, 1800));
+
+  await enrollAll();
+  document.getElementById('payment-form-area').style.display = 'none';
+  document.getElementById('payment-success').style.display = 'block';
+  document.getElementById('checkout-title').textContent = 'Payment successful!';
+}
+
+function applyCoupon() {
+  const code = document.getElementById('coupon-input').value.trim();
+  if (!code) return;
+  UI.toast(`Coupon "${code}" is not valid (demo)`, 'error');
+}
+
+function formatCard(input) {
+  let val = input.value.replace(/\D/g,'').slice(0,16);
+  input.value = val.replace(/(.{4})/g,'$1 ').trim();
+}
+function formatExpiry(input) {
+  let val = input.value.replace(/\D/g,'').slice(0,4);
+  if (val.length >= 2) val = val.slice(0,2) + ' / ' + val.slice(2);
+  input.value = val;
+}
+</script>
+
+</body>
+</html>

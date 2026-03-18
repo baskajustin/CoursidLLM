@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Courses — Coursid</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .catalog-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 32px;
+      padding: 32px 0 64px;
+      align-items: start;
+    }
+    .filter-sidebar {
+      position: sticky;
+      top: 72px;
+    }
+    .filter-section { margin-bottom: 24px; }
+    .filter-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 12px;
+      color: #1c1d1f; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .filter-option {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; cursor: pointer; font-size: 14px; color: #3d3d3d;
+    }
+    .filter-option input { cursor: pointer; accent-color: #a435f0; }
+    .filter-option:hover { color: #a435f0; }
+    .filter-option.active { color: #a435f0; font-weight: 600; }
+    .filter-option-count { font-size: 12px; color: #b4bac4; margin-left: auto; }
+    .filter-divider { height: 1px; background: #e8e9eb; margin: 16px 0; }
+
+    .catalog-header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+    }
+    .catalog-title { font-size: 26px; font-weight: 800; }
+    .catalog-count { font-size: 14px; color: #6a6f73; margin-top: 4px; }
+    .sort-select {
+      padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;
+      font-size: 14px; cursor: pointer; outline: none;
+    }
+    .sort-select:focus { border-color: #a435f0; }
+
+    .active-filters {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+    }
+    .active-filter-tag {
+      display: flex; align-items: center; gap: 6px;
+      background: #1c1d1f; color: #fff;
+      padding: 4px 10px; border-radius: 4px; font-size: 13px; font-weight: 500;
+    }
+    .active-filter-remove {
+      cursor: pointer; opacity: 0.7; font-size: 15px; line-height: 1;
+    }
+    .active-filter-remove:hover { opacity: 1; }
+
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .load-more {
+      text-align: center; margin-top: 32px;
+    }
+
+    .empty-state {
+      text-align: center; padding: 64px 24px; color: #6a6f73;
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state-title { font-size: 22px; font-weight: 700; color: #1c1d1f; margin-bottom: 8px; }
+
+    .catalog-banner {
+      background: linear-gradient(135deg, #1c1d1f 0%, #3d3d3d 100%);
+      color: #fff; padding: 40px 0; margin-bottom: 0;
+    }
+    .catalog-banner-title { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+    .catalog-banner-sub { font-size: 16px; color: #ccd; }
+
+    @media (max-width: 900px) {
+      .catalog-layout { grid-template-columns: 1fr; }
+      .filter-sidebar { position: static; }
+      .courses-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .courses-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-logo">Cours<span>id</span></a>
+    <form id="nav-search-form" class="nav-search">
+      <div class="nav-search-inner">
+        <input id="nav-search-input" type="text" placeholder="Search for anything">
+        <button type="submit" class="nav-search-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
+    </form>
+    <div class="nav-links flex gap-8">
+      <div style="position:relative;">
+        <a href="cart.html" class="nav-link flex gap-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Cart
+        </a>
+        <span id="cart-badge" style="position:absolute;top:-4px;right:-4px;background:#a435f0;color:#fff;border-radius:50%;width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;">0</span>
+      </div>
+      <div id="nav-user-area" class="flex gap-8"></div>
+    </div>
+  </div>
+</nav>
+
+<!-- Banner -->
+<div class="catalog-banner">
+  <div class="container">
+    <div id="banner-title" class="catalog-banner-title">All Courses</div>
+    <div id="banner-sub" class="catalog-banner-sub">Expand your skills with expert-led courses</div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="catalog-layout">
+
+    <!-- FILTER SIDEBAR -->
+    <aside class="filter-sidebar">
+      <div class="filter-section">
+        <div class="filter-title">Category</div>
+        <div id="category-filters"></div>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-section">
+        <div class="filter-title">Level</div>
+        <label class="filter-option"><input type="checkbox" name="level" value="beginner" onchange="applyFilters()"> Beginner <span class="filter-option-count">4</span></label>
+        <label class="filter-option"><input type="checkbox" name="level" value="intermediate" onchange="applyFilters()"> Intermediate <span class="filter-option-count">3</span></label>
+        <label class="filter-option"><input type="checkbox" name="level" value="advanced" onchange="applyFilters()"> Advanced <span class="filter-option-count">1</span></label>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-section">
+        <div class="filter-title">Price</div>
+        <label class="filter-option"><input type="checkbox" id="filter-free" onchange="applyFilters()"> Free </label>
+        <label class="filter-option"><input type="checkbox" id="filter-paid" onchange="applyFilters()"> Paid </label>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-section">
+        <div class="filter-title">Rating</div>
+        <label class="filter-option"><input type="radio" name="rating" value="4.5" onchange="applyFilters()"> ★★★★½ & up</label>
+        <label class="filter-option"><input type="radio" name="rating" value="4.0" onchange="applyFilters()"> ★★★★ & up</label>
+        <label class="filter-option"><input type="radio" name="rating" value="3.5" onchange="applyFilters()"> ★★★½ & up</label>
+        <label class="filter-option"><input type="radio" name="rating" value="" onchange="applyFilters()"> Any rating</label>
+      </div>
+      <div class="filter-divider"></div>
+      <button class="btn btn-outline-black btn-sm w-full" onclick="clearAllFilters()">Clear all filters</button>
+    </aside>
+
+    <!-- MAIN -->
+    <div>
+      <div class="catalog-header">
+        <div>
+          <div class="catalog-title" id="results-title">All Courses</div>
+          <div class="catalog-count" id="results-count"></div>
+        </div>
+        <select class="sort-select" id="sort-select" onchange="applyFilters()">
+          <option value="popular">Most Popular</option>
+          <option value="newest">Newest</option>
+          <option value="rating">Highest Rated</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+        </select>
+      </div>
+
+      <div class="active-filters" id="active-filters"></div>
+
+      <div class="courses-grid" id="courses-grid">
+        <div style="grid-column:1/-1;text-align:center;padding:48px;color:#888;">
+          Loading courses…
+        </div>
+      </div>
+
+      <div class="load-more" id="load-more" style="display:none;">
+        <button class="btn btn-outline-black" onclick="loadMore()">Load more courses</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border-top:none;padding-top:0;">
+      <span>© 2025 Coursid, Inc.</span>
+      <a href="index.html" style="color:#888;">← Back to home</a>
+    </div>
+  </div>
+</footer>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="data/courses.js"></script>
+<script src="js/api.js"></script>
+<script>
+let allCourses = [];
+let filteredCourses = [];
+let displayCount = 9;
+let activeFilters = { category: '', levels: [], free: false, paid: false, minRating: 0, q: '', sort: 'popular' };
+
+document.addEventListener('DOMContentLoaded', async () => {
+  initNav();
+  readUrlParams();
+  await loadCategories();
+  await loadCourses();
+});
+
+function readUrlParams() {
+  const p = new URLSearchParams(location.search);
+  const cat  = p.get('category') || '';
+  const q    = p.get('q') || '';
+  const free = p.get('free') === 'true';
+  activeFilters.category = cat;
+  activeFilters.q = q;
+  activeFilters.free = free;
+
+  if (q) {
+    document.getElementById('nav-search-input').value = q;
+    document.getElementById('banner-title').textContent = `Results for "${q}"`;
+    document.getElementById('banner-sub').textContent = '';
+  } else if (cat) {
+    const catLabel = MockData.CATEGORIES.find(c=>c.id===cat)?.label || cat;
+    document.getElementById('banner-title').textContent = catLabel;
+    document.getElementById('banner-sub').textContent = `Expert-led ${catLabel} courses`;
+  } else if (free) {
+    document.getElementById('banner-title').textContent = 'Free Courses';
+    document.getElementById('banner-sub').textContent = 'Start learning for free today';
+  }
+}
+
+async function loadCategories() {
+  const { categories } = await CoursidAPI.getCategories();
+  const el = document.getElementById('category-filters');
+  el.innerHTML = `<label class="filter-option active" id="cat-all" onclick="setCategory('')" style="cursor:pointer;">
+    <input type="radio" name="cat" value="" ${!activeFilters.category ? 'checked' : ''} style="display:none;"> All Categories
+  </label>` +
+  categories.map(c => `
+    <label class="filter-option ${activeFilters.category === c.id ? 'active' : ''}" onclick="setCategory('${c.id}')" style="cursor:pointer;">
+      <input type="radio" name="cat" value="${c.id}" ${activeFilters.category === c.id ? 'checked' : ''} style="display:none;">
+      ${c.label} <span class="filter-option-count">${c.count}</span>
+    </label>
+  `).join('');
+}
+
+async function loadCourses() {
+  const { courses } = await CoursidAPI.getCourses({ category: activeFilters.category, q: activeFilters.q });
+  allCourses = courses;
+  applyFilters();
+}
+
+function setCategory(cat) {
+  activeFilters.category = cat;
+  document.querySelectorAll('[name="cat"]').forEach(r => { r.checked = r.value === cat; r.parentElement.classList.toggle('active', r.value === cat); });
+  applyFilters();
+}
+
+function applyFilters() {
+  const levels = [...document.querySelectorAll('[name="level"]:checked')].map(r => r.value);
+  const freeChk = document.getElementById('filter-free')?.checked;
+  const paidChk = document.getElementById('filter-paid')?.checked;
+  const ratingRadio = document.querySelector('[name="rating"]:checked');
+  const minRating = ratingRadio ? parseFloat(ratingRadio.value) || 0 : 0;
+  const sort = document.getElementById('sort-select')?.value || 'popular';
+
+  activeFilters = { ...activeFilters, levels, free: freeChk, paid: paidChk, minRating, sort };
+
+  let courses = [...allCourses];
+
+  if (activeFilters.category) courses = courses.filter(c => c.category === activeFilters.category);
+  if (activeFilters.q) { const q = activeFilters.q.toLowerCase(); courses = courses.filter(c => c.title.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q)); }
+  if (levels.length) courses = courses.filter(c => levels.includes(c.level));
+  if (freeChk && !paidChk) courses = courses.filter(c => c.price === 0);
+  if (paidChk && !freeChk) courses = courses.filter(c => c.price > 0);
+  if (minRating) courses = courses.filter(c => (c.rating||0) >= minRating);
+
+  // Sort
+  if (sort === 'rating')      courses.sort((a,b) => (b.rating||0) - (a.rating||0));
+  else if (sort === 'newest') courses.sort((a,b) => b.id.localeCompare(a.id));
+  else if (sort === 'price-low') courses.sort((a,b) => a.price - b.price);
+  else if (sort === 'price-high') courses.sort((a,b) => b.price - a.price);
+  else courses.sort((a,b) => (b.studentsCount||0) - (a.studentsCount||0));
+
+  filteredCourses = courses;
+  displayCount = 9;
+  renderCourses();
+  renderActiveFilters();
+}
+
+function renderCourses() {
+  const grid = document.getElementById('courses-grid');
+  const count = document.getElementById('results-count');
+  count.textContent = `${filteredCourses.length} result${filteredCourses.length !== 1 ? 's' : ''}`;
+
+  const visible = filteredCourses.slice(0, displayCount);
+  if (!visible.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <div class="empty-state-icon">🔍</div>
+      <div class="empty-state-title">No courses found</div>
+      <p>Try different keywords or remove some filters</p>
+      <button class="btn btn-purple mt-16" onclick="clearAllFilters()">Clear filters</button>
+    </div>`;
+  } else {
+    grid.innerHTML = visible.map(c => UI.renderCourseCard(c)).join('');
+  }
+
+  const loadMore = document.getElementById('load-more');
+  loadMore.style.display = filteredCourses.length > displayCount ? 'block' : 'none';
+}
+
+function renderActiveFilters() {
+  const el = document.getElementById('active-filters');
+  const tags = [];
+  if (activeFilters.q) tags.push({ label: `"${activeFilters.q}"`, clear: () => { activeFilters.q = ''; applyFilters(); } });
+  if (activeFilters.category) {
+    const label = MockData.CATEGORIES.find(c=>c.id===activeFilters.category)?.label || activeFilters.category;
+    tags.push({ label, clear: () => setCategory('') });
+  }
+  activeFilters.levels.forEach(l => tags.push({ label: l.charAt(0).toUpperCase()+l.slice(1), clear: () => { document.querySelector(`[name="level"][value="${l}"]`).checked=false; applyFilters(); } }));
+  if (activeFilters.free) tags.push({ label: 'Free', clear: () => { document.getElementById('filter-free').checked=false; applyFilters(); } });
+  if (activeFilters.paid) tags.push({ label: 'Paid', clear: () => { document.getElementById('filter-paid').checked=false; applyFilters(); } });
+
+  el.innerHTML = tags.map((t,i) => `
+    <span class="active-filter-tag">
+      ${t.label}
+      <span class="active-filter-remove" onclick="removeFilter(${i})">×</span>
+    </span>
+  `).join('');
+
+  // store clearers
+  el._clearFns = tags.map(t => t.clear);
+}
+
+function removeFilter(i) {
+  const el = document.getElementById('active-filters');
+  if (el._clearFns && el._clearFns[i]) el._clearFns[i]();
+}
+
+function clearAllFilters() {
+  activeFilters = { category: '', levels: [], free: false, paid: false, minRating: 0, q: '', sort: 'popular' };
+  document.querySelectorAll('[name="level"]').forEach(r => r.checked = false);
+  const ff = document.getElementById('filter-free'); if (ff) ff.checked = false;
+  const fp = document.getElementById('filter-paid'); if (fp) fp.checked = false;
+  document.querySelectorAll('[name="rating"]').forEach(r => r.checked = false);
+  document.querySelectorAll('[name="cat"]').forEach(r => { r.checked = r.value===''; r.parentElement.classList.toggle('active', r.value===''); });
+  const nav = document.getElementById('nav-search-input'); if(nav) nav.value = '';
+  applyFilters();
+}
+
+function loadMore() {
+  displayCount += 9;
+  renderCourses();
+}
+</script>
+
+</body>
+</html>

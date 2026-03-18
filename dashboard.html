@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Learning — Coursid</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .dashboard-header {
+      background: linear-gradient(135deg, #1c1d1f 0%, #2d2e31 100%);
+      color: #fff; padding: 40px 0 32px;
+    }
+    .dashboard-title { font-size: 32px; font-weight: 800; margin-bottom: 6px; }
+    .dashboard-sub { font-size: 16px; color: #aaa; }
+
+    .dashboard-tabs {
+      border-bottom: 1px solid #e8e9eb;
+      background: #fff; position: sticky; top: 56px; z-index: 50;
+    }
+    .dashboard-tab-inner { display: flex; gap: 0; }
+    .dash-tab {
+      padding: 14px 20px; font-size: 15px; font-weight: 600;
+      color: #6a6f73; cursor: pointer; border-bottom: 3px solid transparent;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .dash-tab:hover { color: #1c1d1f; }
+    .dash-tab.active { color: #1c1d1f; border-bottom-color: #a435f0; }
+
+    .dash-content { padding: 32px 0 64px; }
+
+    /* Enrolled course card */
+    .enrolled-card {
+      display: flex; gap: 20px; background: #fff;
+      border: 1px solid #e8e9eb; border-radius: 8px; overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .enrolled-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .enrolled-thumb {
+      width: 200px; min-height: 120px; flex-shrink: 0;
+      background: #1c1d1f; position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .enrolled-thumb-placeholder { font-size: 32px; }
+    .enrolled-body { flex: 1; padding: 16px; display: flex; flex-direction: column; }
+    .enrolled-title { font-size: 16px; font-weight: 700; color: #1c1d1f; margin-bottom: 4px; }
+    .enrolled-instructor { font-size: 13px; color: #6a6f73; margin-bottom: 12px; }
+    .enrolled-progress-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .enrolled-progress-bar { flex: 1; }
+    .enrolled-pct { font-size: 13px; font-weight: 600; color: #1c1d1f; white-space: nowrap; }
+    .enrolled-actions { display: flex; gap: 8px; }
+
+    /* Stats cards */
+    .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: #fff; border: 1px solid #e8e9eb; border-radius: 8px;
+      padding: 20px; text-align: center;
+    }
+    .stat-number { font-size: 36px; font-weight: 800; color: #1c1d1f; line-height: 1; }
+    .stat-label { font-size: 13px; color: #6a6f73; margin-top: 6px; }
+
+    .empty-enrolled {
+      text-align: center; padding: 64px 24px; color: #6a6f73;
+    }
+
+    @media (max-width: 768px) {
+      .enrolled-card { flex-direction: column; }
+      .enrolled-thumb { width: 100%; min-height: 160px; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-logo">Cours<span>id</span></a>
+    <div class="nav-links flex gap-8">
+      <a href="catalog.html" class="nav-link">Browse courses</a>
+      <div id="nav-user-area" class="flex gap-8"></div>
+    </div>
+  </div>
+</nav>
+
+<div class="dashboard-header">
+  <div class="container">
+    <div class="dashboard-title" id="dash-greeting">My Learning</div>
+    <div class="dashboard-sub" id="dash-sub">Continue where you left off</div>
+  </div>
+</div>
+
+<div class="dashboard-tabs">
+  <div class="container">
+    <div class="dashboard-tab-inner">
+      <div class="dash-tab active" onclick="switchDashTab(this,'my-courses')">My Courses</div>
+      <div class="dash-tab" onclick="switchDashTab(this,'wishlist')">Wishlist</div>
+      <div class="dash-tab" onclick="switchDashTab(this,'achievements')">Achievements</div>
+      <div class="dash-tab" onclick="switchDashTab(this,'account')">Account</div>
+    </div>
+  </div>
+</div>
+
+<div class="dash-content">
+  <div class="container">
+
+    <!-- My Courses Tab -->
+    <div id="tab-my-courses">
+      <div class="stat-grid" id="stats-grid"></div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:20px;">All Courses</div>
+      <div id="enrolled-list" style="display:flex;flex-direction:column;gap:16px;"></div>
+    </div>
+
+    <!-- Wishlist Tab -->
+    <div id="tab-wishlist" style="display:none;">
+      <div class="empty-enrolled">
+        <div style="font-size:48px;margin-bottom:16px;">❤️</div>
+        <div style="font-size:22px;font-weight:700;color:#1c1d1f;margin-bottom:8px;">Your wishlist is empty</div>
+        <p>Save courses to your wishlist to revisit them later.</p>
+        <a href="catalog.html" class="btn btn-purple mt-16">Browse courses</a>
+      </div>
+    </div>
+
+    <!-- Achievements Tab -->
+    <div id="tab-achievements" style="display:none;">
+      <div style="font-size:20px;font-weight:800;margin-bottom:20px;">Your Achievements</div>
+      <div id="certs-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;"></div>
+    </div>
+
+    <!-- Account Tab -->
+    <div id="tab-account" style="display:none;">
+      <div style="max-width:560px;">
+        <div style="font-size:20px;font-weight:800;margin-bottom:24px;">Account Settings</div>
+        <form onsubmit="saveProfile(event)">
+          <div class="form-group">
+            <label class="label">Full Name</label>
+            <input class="input" id="profile-name" type="text">
+          </div>
+          <div class="form-group">
+            <label class="label">Email</label>
+            <input class="input" id="profile-email" type="email" readonly style="background:#f7f9fa;">
+          </div>
+          <div class="form-group">
+            <label class="label">Bio</label>
+            <textarea class="input" id="profile-bio" rows="3" placeholder="Tell instructors and students about yourself…" style="resize:vertical;"></textarea>
+          </div>
+          <div class="flex gap-12">
+            <button type="submit" class="btn btn-purple">Save changes</button>
+            <button type="button" class="btn btn-outline-black" onclick="Auth.logout();window.location='index.html'">Sign out</button>
+          </div>
+        </form>
+        <div class="divider"></div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:16px;">Password</div>
+        <form onsubmit="changePassword(event)">
+          <div class="form-group"><label class="label">Current password</label><input class="input" type="password" id="cur-pass"></div>
+          <div class="form-group"><label class="label">New password</label><input class="input" type="password" id="new-pass"></div>
+          <button type="submit" class="btn btn-outline-black">Update password</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="data/courses.js"></script>
+<script src="js/api.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.isLoggedIn()) { window.location = 'login.html?redirect=dashboard.html'; return; }
+
+  const user = Auth.getUser();
+  initNav();
+
+  document.getElementById('dash-greeting').textContent = `Welcome back, ${user.name.split(' ')[0]}!`;
+  document.getElementById('dash-sub').textContent = `You\'re on the ${user.plan === 'pro' ? 'Pro' : 'Free'} plan`;
+
+  document.getElementById('profile-name').value = user.name;
+  document.getElementById('profile-email').value = user.email;
+
+  await loadEnrolledCourses();
+  renderAchievements();
+});
+
+async function loadEnrolledCourses() {
+  const enrolledIds = Auth.getEnrolledCourses();
+  const el = document.getElementById('enrolled-list');
+  const statsEl = document.getElementById('stats-grid');
+  const progressData = JSON.parse(localStorage.getItem('coursid_progress') || '{}');
+
+  if (!enrolledIds.length) {
+    el.innerHTML = `
+      <div class="empty-enrolled">
+        <div style="font-size:48px;margin-bottom:16px;">📚</div>
+        <div style="font-size:22px;font-weight:700;color:#1c1d1f;margin-bottom:8px;">You're not enrolled in any courses yet</div>
+        <p>Start your learning journey today!</p>
+        <a href="catalog.html" class="btn btn-purple mt-16">Browse courses</a>
+      </div>`;
+    statsEl.innerHTML = '';
+    return;
+  }
+
+  const courses = await Promise.all(enrolledIds.map(id => CoursidAPI.getCourse(id)));
+  const valid = courses.filter(c => c && !c.error);
+
+  let totalHours = 0, completedLessons = 0, totalLessons = 0;
+  valid.forEach(c => {
+    const allLess = c.sections.flatMap(s => s.lectures || []);
+    totalLessons += allLess.length;
+    completedLessons += Object.keys(progressData[c.id] || {}).length;
+    totalHours += (c.includes?.videoHours || 0);
+  });
+
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-number">${valid.length}</div><div class="stat-label">Courses enrolled</div></div>
+    <div class="stat-card"><div class="stat-number">${completedLessons}</div><div class="stat-label">Lessons completed</div></div>
+    <div class="stat-card"><div class="stat-number">${totalHours}h</div><div class="stat-label">Content access</div></div>
+    <div class="stat-card"><div class="stat-number">${valid.filter(c=>{ const l=c.sections.flatMap(s=>s.lectures||[]); return l.length && Object.keys(progressData[c.id]||{}).length===l.length; }).length}</div><div class="stat-label">Courses completed</div></div>
+  `;
+
+  el.innerHTML = valid.map(c => {
+    const allLess = c.sections.flatMap(s => s.lectures || []);
+    const done = Object.keys(progressData[c.id] || {}).length;
+    const pct = allLess.length ? Math.round((done/allLess.length)*100) : 0;
+    const emojis = { 'web-dev':'💻','data-sci':'📊','ai-ml':'🤖','design':'🎨','marketing':'📣','devops':'☁️','mobile':'📱' };
+    return `
+      <div class="enrolled-card">
+        <div class="enrolled-thumb">
+          <div class="enrolled-thumb-placeholder">${emojis[c.category]||'📚'}</div>
+        </div>
+        <div class="enrolled-body">
+          <div class="enrolled-title">${c.title}</div>
+          <div class="enrolled-instructor">${c.instructor?.name||'Instructor'}</div>
+          <div class="enrolled-progress-row">
+            <div class="progress-bar enrolled-progress-bar">
+              <div class="progress-fill" style="width:${pct}%"></div>
+            </div>
+            <div class="enrolled-pct">${pct}% complete</div>
+          </div>
+          <div class="enrolled-actions">
+            <a href="learn.html?id=${c.id}" class="btn btn-purple btn-sm">${pct > 0 ? 'Continue' : 'Start'} learning</a>
+            <a href="course.html?id=${c.id}" class="btn btn-outline-black btn-sm">View course</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAchievements() {
+  const enrolledIds = Auth.getEnrolledCourses();
+  const progressData = JSON.parse(localStorage.getItem('coursid_progress') || '{}');
+  const completed = enrolledIds.filter(id => {
+    const course = MockData.COURSES.find(c=>c.id===id);
+    if (!course) return false;
+    const allLess = course.sections.flatMap(s=>s.lectures||[]);
+    return allLess.length > 0 && Object.keys(progressData[id]||{}).length === allLess.length;
+  });
+
+  const el = document.getElementById('certs-grid');
+  if (!completed.length) {
+    el.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6a6f73;">
+      <div style="font-size:36px;margin-bottom:12px;">🎓</div>
+      <div style="font-size:18px;font-weight:700;color:#1c1d1f;">No certificates yet</div>
+      <p style="margin-top:8px;">Complete a course to earn your certificate.</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = completed.map(id => {
+    const c = MockData.COURSES.find(co=>co.id===id);
+    if (!c) return '';
+    return `
+      <div style="background:#fff;border:1px solid #e8e9eb;border-radius:8px;padding:24px;text-align:center;">
+        <div style="font-size:40px;margin-bottom:12px;">🏆</div>
+        <div style="font-size:15px;font-weight:700;color:#1c1d1f;margin-bottom:6px;">${c.title}</div>
+        <div style="font-size:13px;color:#6a6f73;margin-bottom:16px;">${c.instructor?.name||'Instructor'}</div>
+        <button class="btn btn-outline-black btn-sm" onclick="UI.toast('Certificate download coming soon!')">Download certificate</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function switchDashTab(el, tab) {
+  document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['my-courses','wishlist','achievements','account'].forEach(t => {
+    const el2 = document.getElementById('tab-'+t);
+    if (el2) el2.style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+function initNav() {
+  const user = Auth.getUser();
+  const area = document.getElementById('nav-user-area');
+  if (area && user) {
+    area.innerHTML = `
+      <div style="width:36px;height:36px;border-radius:50%;background:#a435f0;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;">
+        ${user.name.charAt(0).toUpperCase()}
+      </div>
+      <button class="btn btn-outline-black btn-sm" onclick="Auth.logout();window.location='index.html'">Sign out</button>
+    `;
+  }
+  UI.setCartBadge(Cart.getCount());
+}
+
+function saveProfile(e) {
+  e.preventDefault();
+  const user = Auth.getUser();
+  user.name = document.getElementById('profile-name').value;
+  localStorage.setItem('coursid_user', JSON.stringify(user));
+  UI.toast('Profile saved!', 'success');
+}
+
+function changePassword(e) {
+  e.preventDefault();
+  const cur = document.getElementById('cur-pass').value;
+  const nw  = document.getElementById('new-pass').value;
+  if (!cur || !nw) { UI.toast('Please fill both fields', 'error'); return; }
+  if (nw.length < 6) { UI.toast('Password must be at least 6 characters', 'error'); return; }
+  UI.toast('Password updated!', 'success');
+  document.getElementById('cur-pass').value = '';
+  document.getElementById('new-pass').value = '';
+}
+</script>
+
+</body>
+</html>

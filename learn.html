@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning — Coursid</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    body { background: #1c1d1f; color: #fff; padding-bottom: 0; }
+    * { box-sizing: border-box; }
+
+    /* Top bar */
+    .learn-nav {
+      height: 56px; background: #1c1d1f;
+      border-bottom: 1px solid #3d3d3d;
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 16px; position: sticky; top: 0; z-index: 100;
+    }
+    .learn-nav-logo { font-size: 18px; font-weight: 800; color: #fff; text-decoration: none; }
+    .learn-nav-logo span { color: #a435f0; }
+    .learn-nav-title { font-size: 14px; color: #ccc; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .learn-nav-progress { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #ccc; white-space: nowrap; }
+    .learn-nav-progress-bar { width: 120px; height: 6px; background: #3d3d3d; border-radius: 99px; overflow: hidden; }
+    .learn-nav-progress-fill { height: 100%; background: #a435f0; border-radius: 99px; transition: width 0.4s; }
+    .learn-nav-btn {
+      padding: 6px 14px; border: 1px solid #555; border-radius: 4px;
+      color: #ccc; font-size: 13px; font-weight: 600; cursor: pointer;
+      background: transparent; transition: all 0.15s;
+    }
+    .learn-nav-btn:hover { border-color: #fff; color: #fff; }
+
+    /* Layout */
+    .learn-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+    }
+
+    /* Video area */
+    .learn-main {
+      display: flex; flex-direction: column;
+      overflow-y: auto; background: #000;
+    }
+
+    .video-area {
+      position: relative;
+      background: #000;
+      aspect-ratio: 16/9;
+      max-height: 60vh;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .video-placeholder {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    }
+    .video-play-btn {
+      width: 72px; height: 72px;
+      background: rgba(164,53,240,0.9);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+      margin-bottom: 16px;
+    }
+    .video-play-btn:hover { background: #a435f0; transform: scale(1.08); }
+    .video-lesson-title { font-size: 16px; font-weight: 600; color: #ccc; text-align: center; padding: 0 24px; }
+    .video-lesson-sub { font-size: 13px; color: #888; margin-top: 6px; }
+
+    /* Below video */
+    .lesson-content { padding: 24px; background: #1c1d1f; flex: 1; }
+    .lesson-content-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 16px; }
+    .lesson-tabs { display: flex; border-bottom: 1px solid #3d3d3d; margin-bottom: 20px; gap: 4px; }
+    .lesson-tab {
+      padding: 10px 16px; font-size: 14px; font-weight: 500; color: #aaa;
+      border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.15s;
+      margin-bottom: -1px;
+    }
+    .lesson-tab:hover { color: #fff; }
+    .lesson-tab.active { color: #fff; border-bottom-color: #a435f0; }
+
+    .lesson-tab-content { color: #ccc; font-size: 15px; line-height: 1.7; }
+    .lesson-nav-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 24px; background: #1c1d1f;
+      border-top: 1px solid #3d3d3d; flex-shrink: 0;
+    }
+
+    /* Sidebar */
+    .learn-sidebar {
+      background: #1c1d1f;
+      border-left: 1px solid #3d3d3d;
+      overflow-y: auto;
+      display: flex; flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #3d3d3d;
+      font-size: 14px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section { border-bottom: 1px solid #3d3d3d; }
+    .sidebar-section-header {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 14px 16px; cursor: pointer;
+      background: #242526; transition: background 0.15s;
+    }
+    .sidebar-section-header:hover { background: #2d2e30; }
+    .sidebar-section-title { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.4; flex: 1; }
+    .sidebar-section-meta { font-size: 12px; color: #888; margin-top: 3px; }
+    .sidebar-section-check {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid #555; flex-shrink: 0; margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-section-check.done { background: #a435f0; border-color: #a435f0; }
+
+    .sidebar-lesson {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px 10px 28px; cursor: pointer;
+      font-size: 13px; color: #aaa; transition: all 0.15s;
+      border-top: 1px solid #2d2e30;
+    }
+    .sidebar-lesson:hover { background: #2d2e30; color: #fff; }
+    .sidebar-lesson.active { background: #2d2e30; color: #fff; border-left: 3px solid #a435f0; }
+    .sidebar-lesson-check {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 1.5px solid #555; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .sidebar-lesson-check.done { background: #a435f0; border-color: #a435f0; }
+    .sidebar-lesson-title { flex: 1; line-height: 1.4; }
+    .sidebar-lesson-dur { font-size: 11px; color: #666; white-space: nowrap; }
+    .sidebar-lesson-preview {
+      font-size: 11px; color: #a435f0; white-space: nowrap;
+    }
+    .sidebar-section-lectures { display: none; }
+    .sidebar-section.open .sidebar-section-lectures { display: block; }
+    .sidebar-chevron { font-size: 12px; color: #888; transition: transform 0.2s; flex-shrink: 0; margin-top: 4px; }
+    .sidebar-section.open .sidebar-chevron { transform: rotate(180deg); }
+
+    @media (max-width: 960px) {
+      .learn-layout { grid-template-columns: 1fr; }
+      .learn-sidebar { display: none; }
+      .learn-layout.sidebar-open .learn-sidebar { display: flex; position: fixed; right: 0; top: 56px; width: 100%; max-width: 360px; height: calc(100vh - 56px); z-index: 200; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="learn-nav">
+  <a href="index.html" class="learn-nav-logo">Cours<span>id</span></a>
+  <div class="learn-nav-title" id="learn-nav-title">Loading…</div>
+  <div class="learn-nav-progress">
+    <div class="learn-nav-progress-bar"><div class="learn-nav-progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <span id="progress-text">0%</span>
+  </div>
+  <button class="learn-nav-btn" onclick="window.location='dashboard.html'">My Learning</button>
+</div>
+
+<!-- LAYOUT -->
+<div class="learn-layout" id="learn-layout">
+
+  <!-- MAIN -->
+  <div class="learn-main">
+    <!-- Video -->
+    <div class="video-area">
+      <div class="video-placeholder" id="video-area">
+        <div class="video-play-btn" onclick="markComplete()">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+        </div>
+        <div class="video-lesson-title" id="video-title">Select a lesson to start</div>
+        <div class="video-lesson-sub" id="video-sub">Use the sidebar to navigate</div>
+      </div>
+    </div>
+
+    <!-- Lesson nav buttons -->
+    <div class="lesson-nav-row">
+      <button class="btn btn-outline-white btn-sm" onclick="prevLesson()">← Previous</button>
+      <button class="btn btn-purple btn-sm" style="flex:1;max-width:200px;" onclick="markComplete()">Mark as complete ✓</button>
+      <button class="btn btn-outline-white btn-sm" onclick="nextLesson()">Next →</button>
+    </div>
+
+    <!-- Lesson content tabs -->
+    <div class="lesson-content">
+      <div class="lesson-content-title" id="lesson-content-title">Select a lesson</div>
+      <div class="lesson-tabs">
+        <div class="lesson-tab active" onclick="switchTab(this,'overview')">Overview</div>
+        <div class="lesson-tab" onclick="switchTab(this,'notes')">Notes</div>
+        <div class="lesson-tab" onclick="switchTab(this,'qa')">Q&A</div>
+        <div class="lesson-tab" onclick="switchTab(this,'resources')">Resources</div>
+      </div>
+      <div class="lesson-tab-content" id="tab-overview">
+        <p id="lesson-description">Click a lesson in the sidebar to start learning.</p>
+      </div>
+      <div class="lesson-tab-content" id="tab-notes" style="display:none;">
+        <textarea placeholder="Take notes here…" style="width:100%;min-height:200px;background:#2d2e30;border:1px solid #3d3d3d;border-radius:8px;color:#fff;padding:14px;font-size:14px;font-family:Inter,sans-serif;outline:none;resize:vertical;"></textarea>
+      </div>
+      <div class="lesson-tab-content" id="tab-qa" style="display:none;">
+        <p style="color:#888;margin-bottom:16px;">Questions & Answers from students and instructor.</p>
+        <textarea placeholder="Ask a question about this lesson…" style="width:100%;min-height:100px;background:#2d2e30;border:1px solid #3d3d3d;border-radius:8px;color:#fff;padding:14px;font-size:14px;font-family:Inter,sans-serif;outline:none;resize:vertical;margin-bottom:10px;"></textarea>
+        <button class="btn btn-purple btn-sm" onclick="UI.toast('Question submitted!','success')">Submit question</button>
+      </div>
+      <div class="lesson-tab-content" id="tab-resources" style="display:none;">
+        <p style="color:#888;">Downloadable resources for this lesson will appear here.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="learn-sidebar" id="course-sidebar">
+    <div class="sidebar-header">Course Content</div>
+    <div id="sections-list">
+      <div style="padding:24px;color:#888;font-size:14px;">Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+<script src="data/courses.js"></script>
+<script src="js/api.js"></script>
+<script>
+let course = null;
+let allLessons = [];
+let activeLessonId = null;
+let progress = {};
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!Auth.isLoggedIn()) {
+    const p = new URLSearchParams(location.search);
+    window.location = `login.html?redirect=learn.html?id=${p.get('id')||'c001'}`;
+    return;
+  }
+
+  const p = new URLSearchParams(location.search);
+  const id = p.get('id') || 'c001';
+  const lessonId = p.get('lesson');
+
+  try {
+    course = await CoursidAPI.getCourse(id);
+    if (!course || course.error) throw new Error();
+
+    // flatten lessons
+    allLessons = course.sections.flatMap(s => s.lectures || []);
+    const storedProgress = JSON.parse(localStorage.getItem('coursid_progress') || '{}');
+    progress = storedProgress[id] || {};
+
+    document.getElementById('learn-nav-title').textContent = course.title;
+    renderSidebar();
+    updateProgressBar();
+
+    // load first lesson or URL lesson
+    const firstLesson = lessonId ? allLessons.find(l=>l.id===lessonId) : allLessons[0];
+    if (firstLesson) selectLesson(firstLesson.id);
+
+  } catch(e) {
+    document.getElementById('learn-nav-title').textContent = 'Course not found';
+  }
+});
+
+function renderSidebar() {
+  const el = document.getElementById('sections-list');
+  el.innerHTML = course.sections.map((sec, si) => {
+    const secLectures = sec.lectures || [];
+    const doneSec = secLectures.filter(l => progress[l.id]).length;
+    const allDone = doneSec === secLectures.length && secLectures.length > 0;
+
+    return `
+      <div class="sidebar-section ${si === 0 ? 'open' : ''}" id="sec-${sec.id}">
+        <div class="sidebar-section-header" onclick="toggleSidebarSection('${sec.id}')">
+          <div class="sidebar-section-check ${allDone ? 'done' : ''}">
+            ${allDone ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg>' : ''}
+          </div>
+          <div style="flex:1;">
+            <div class="sidebar-section-title">${sec.title}</div>
+            <div class="sidebar-section-meta">${doneSec}/${secLectures.length} • ${sec.duration||''}</div>
+          </div>
+          <div class="sidebar-chevron">▼</div>
+        </div>
+        <div class="sidebar-section-lectures">
+          ${secLectures.map(lec => `
+            <div class="sidebar-lesson ${activeLessonId === lec.id ? 'active' : ''}" id="sidebar-lec-${lec.id}" onclick="selectLesson('${lec.id}')">
+              <div class="sidebar-lesson-check ${progress[lec.id] ? 'done' : ''}" onclick="event.stopPropagation();toggleComplete('${lec.id}')">
+                ${progress[lec.id] ? '<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5"><polyline points="20,6 9,17 4,12"/></svg>' : ''}
+              </div>
+              <div class="sidebar-lesson-title">
+                ${lec.title}
+                ${lec.isPreview && !Auth.isEnrolled(course.id) ? '<div class="sidebar-lesson-preview">Preview</div>' : ''}
+              </div>
+              <div class="sidebar-lesson-dur">${lec.duration||''}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleSidebarSection(id) {
+  document.getElementById('sec-'+id)?.classList.toggle('open');
+}
+
+function selectLesson(lessonId) {
+  activeLessonId = lessonId;
+  const lesson = allLessons.find(l => l.id === lessonId);
+  if (!lesson) return;
+
+  // Update video area
+  document.getElementById('video-title').textContent = lesson.title;
+  document.getElementById('video-sub').textContent = lesson.duration ? `Duration: ${lesson.duration}` : 'Watch this lesson';
+  document.getElementById('lesson-content-title').textContent = lesson.title;
+  document.getElementById('lesson-description').textContent = `This lesson covers "${lesson.title}". Click the play button above to start watching, or mark it complete when you're done.`;
+
+  // Update sidebar active state
+  document.querySelectorAll('.sidebar-lesson').forEach(el => {
+    el.classList.toggle('active', el.id === 'sidebar-lec-' + lessonId);
+  });
+
+  // Open parent section
+  course.sections.forEach(sec => {
+    const inSec = (sec.lectures||[]).some(l => l.id === lessonId);
+    if (inSec) document.getElementById('sec-'+sec.id)?.classList.add('open');
+  });
+
+  // Update URL
+  const url = new URL(location.href);
+  url.searchParams.set('lesson', lessonId);
+  history.replaceState({}, '', url.toString());
+}
+
+function markComplete() {
+  if (!activeLessonId || !course) return;
+  if (!progress[activeLessonId]) {
+    progress[activeLessonId] = { completedAt: new Date().toISOString() };
+    const all = JSON.parse(localStorage.getItem('coursid_progress') || '{}');
+    all[course.id] = progress;
+    localStorage.setItem('coursid_progress', JSON.stringify(all));
+    renderSidebar();
+    updateProgressBar();
+    UI.toast('Lesson marked complete! ✓', 'success');
+    // auto-advance
+    setTimeout(() => nextLesson(), 800);
+  } else {
+    nextLesson();
+  }
+}
+
+function toggleComplete(lessonId) {
+  if (progress[lessonId]) {
+    delete progress[lessonId];
+  } else {
+    progress[lessonId] = { completedAt: new Date().toISOString() };
+  }
+  const all = JSON.parse(localStorage.getItem('coursid_progress') || '{}');
+  all[course.id] = progress;
+  localStorage.setItem('coursid_progress', JSON.stringify(all));
+  renderSidebar();
+  updateProgressBar();
+}
+
+function nextLesson() {
+  const idx = allLessons.findIndex(l => l.id === activeLessonId);
+  if (idx < allLessons.length - 1) selectLesson(allLessons[idx+1].id);
+  else UI.toast('🎉 You have reached the end of the course!', 'success', 4000);
+}
+
+function prevLesson() {
+  const idx = allLessons.findIndex(l => l.id === activeLessonId);
+  if (idx > 0) selectLesson(allLessons[idx-1].id);
+}
+
+function updateProgressBar() {
+  const pct = allLessons.length ? Math.round((Object.keys(progress).length / allLessons.length) * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = pct + '% complete';
+}
+
+function switchTab(el, tab) {
+  document.querySelectorAll('.lesson-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['overview','notes','qa','resources'].forEach(t => {
+    const el2 = document.getElementById('tab-'+t);
+    if (el2) el2.style.display = t === tab ? 'block' : 'none';
+  });
+}
+</script>
+
+</body>
+</html>
